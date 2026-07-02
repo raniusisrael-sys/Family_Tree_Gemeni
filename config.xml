@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<widget id="com.siva.familyheritage" version="1.0.0" xmlns="http://cordova.apache.org/ns/v1.0">
+    <name>Family Heritage</name>
+    <description>Family Tree Application</description>
+    <author email="siva@example.com">Siva</author>
+    
+    <content src="index.html" />
+    
+    <access origin="*" />
+    <allow-navigation href="*" />
+    
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="whatsapp:*" />
+    <allow-intent href="https://api.whatsapp.com/*" />
+
+    <preference name="Orientation" value="portrait" />
+    <preference name="BackgroundColor" value="#008069" />
+</widget>

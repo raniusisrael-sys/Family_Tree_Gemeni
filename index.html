@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Family Heritage App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <h1 id="header-title">Family Heritage</h1>
+                <p id="header-subtitle">Preserving Our Legacy Forever</p>
+            </div>
+            <button id="dark-mode-toggle-btn" class="header-toggle-icon" onclick="toggleNativeAppDarkMode()">🌙</button>
+        </div>
+    </div>
+
+    <div id="app-main-content">
+        
+        <div id="screen-tree" class="app-screen active">
+            <div class="floating-tree-search-wrapper">
+                <input type="text" id="tree-instant-search-input" placeholder="🔍 Find by name on chart...">
+            </div>
+            <div id="tree-viewport">
+                <div id="zoom-canvas">
+                    <div id="html-tree-container" class="tree-branch"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-list" class="app-screen">
+            <div class="premium-analytics-grid">
+                <div class="analytic-tab-pill">🌳 Total: <span id="stat-total-count">0</span></div>
+                <div class="analytic-tab-pill">👨 Men: <span id="stat-male-count">0</span></div>
+                <div class="analytic-tab-pill">👩 Women: <span id="stat-female-count">0</span></div>
+                <div class="analytic-tab-pill">🩸 Top Blood: <span id="stat-top-blood">O+</span></div>
+            </div>
+
+            <div id="birthday-reminder-widget" class="birthday-toast-panel" style="display:none;">
+                <div class="birthday-toast-header">🎉 This Month's Birthdays</div>
+                <div id="birthday-names-list" class="birthday-names-scroller"></div>
+            </div>
+
+            <div class="search-box-wrapper">
+                <input type="text" id="member-search-input" placeholder="🔍 Search family member directory...">
+                <div class="generation-filter-chips-scroller">
+                    <div class="filter-chip active" onclick="applyDirectoryGenerationFilter('all', this)">Show All</div>
+                    <div class="filter-chip" onclick="applyDirectoryGenerationFilter('ancestors', this)">Top Ancestors</div>
+                    <div class="filter-chip" onclick="applyDirectoryGenerationFilter('descendants', this)">Descendants</div>
+                </div>
+            </div>
+            <div id="members-directory-list" class="directory-container"></div>
+        </div>
+
+        <div id="screen-add" class="app-screen">
+            <div class="form-container">
+                <h3>➕ Add New Family Member</h3>
+                <p style="font-size: 12px; color: #64748b; margin-top:-5px; margin-bottom: 20px;">Enter details to append to your family records.</p>
+                
+                <div class="input-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="form-name" placeholder="e.g., அருளப்பன்">
+                </div>
+                <div class="input-group">
+                    <label>Gender *</label>
+                    <select id="form-gender">
+                        <option value="ஆண்">ஆண் (Male)</option>
+                        <option value="பெண்">பெண் (Female)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Date of Birth *</label>
+                    <input type="date" id="form-dob">
+                </div>
+                <div class="input-group">
+                    <label>Father's Name (Link Lineage)</label>
+                    <select id="form-father"></select>
+                </div>
+                <div class="input-group">
+                    <label>Spouse's Name (Link Partner)</label>
+                    <select id="form-spouse"></select>
+                </div>
+                <div class="input-group">
+                    <label>Blood Group</label>
+                    <select id="form-blood">
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Occupation / Title</label>
+                    <input type="text" id="form-title" placeholder="e.g., ஓய்வு ஆசிரியர்">
+                </div>
+                <div class="input-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="form-mobile" placeholder="e.g., 9159698818">
+                </div>
+                <div class="input-group">
+                    <label>Current Address</label>
+                    <input type="text" id="form-address" placeholder="e.g., அத்திகுளம்">
+                </div>
+                
+                <div class="input-group">
+                    <label>Profile Photo *</label>
+                    <div class="custom-native-upload-btn-row">
+                        <input type="file" id="form-photo-file-picker" accept="image/*" onchange="previewAndVerifySelectedPhoto(this)" style="display: none;">
+                        <button type="button" class="native-photo-trigger-btn" onclick="document.getElementById('form-photo-file-picker').click()">📸 Choose from Gallery / Camera</button>
+                        <span id="form-photo-status-badge" class="photo-badge-status">No photo selected</span>
+                    </div>
+                    <input type="hidden" id="form-photo-url-hidden">
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-top:25px; margin-bottom:40px;">
+                    <button class="cancel-btn" onclick="switchTab('tree')">Cancel</button>
+                    <button class="submit-btn" onclick="submitNewMemberLocal()">Save Member</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="app-floating-btn" class="whatsapp-fab" onclick="triggerFabAction()">＋</div>
+
+    <div id="profile-modal" class="modal-overlay" onclick="closeProfileModal()">
+        <div class="modal-sheet" onclick="event.stopPropagation()">
+            <div class="drag-handle-bar"></div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: -15px; padding: 0 5px;">
+                <button onclick="triggerEditFormActionLocal()" class="modal-action-icon">✏️</button>
+                <button onclick="triggerDeleteActionLocal()" class="modal-action-icon">🗑️</button>
+            </div>
+            <div class="modal-header-block">
+                <img id="modal-avatar" src="" alt="avatar" onclick="openFullscreenPhotoZoom()">
+                <h2 id="modal-name">Name</h2>
+                <p id="modal-title">Occupation</p>
+                
+                <div class="native-dialer-action-row-buttons">
+                    <button id="quick-action-link-call" onclick="executeNativePhoneCallIntent()" class="dial-circle-btn phone-color" style="border:none; cursor:pointer;">📞 Phone</button>
+                    <button id="quick-action-link-whatsapp" onclick="executeNativeWhatsAppIntent()" class="dial-circle-btn whatsapp-color" style="border:none; cursor:pointer;">💬 WhatsApp</button>
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-row"><span class="info-label">Gender</span><span class="info-value" id="modal-gender">-</span></div>
+                <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value" id="modal-dob">-</span></div>
+                <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value" id="modal-blood">-</span></div>
+                <div class="info-row"><span class="info-label">Mobile Contact</span><span class="info-value" id="modal-phone">-</span></div>
+                <div class="info-row"><span class="info-label">Current Address</span><span class="info-value" id="modal-address">-</span></div>
+            </div>
+            <button class="close-btn" onclick="closeProfileModal()">← Close View</button>
+        </div>
+    </div>
+
+    <div id="fullscreen-viewer" class="fullscreen-photo-modal" onclick="closeFullscreenPhotoZoom()">
+        <span class="fullscreen-close-x">&times;</span>
+        <img id="fullscreen-target-img" src="" alt="Zoomed Photo">
+    </div>
+
+    <div id="loading-overlay">
+        <div class="gear-spinner">⚙️</div>
+        <div id="loading-overlay-text" class="loading-text">Syncing with Cloud...</div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('tree', this)">
+            <div class="nav-icon">🌳</div>
+            <div class="nav-label">Tree Chart</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('list', this)">
+            <div class="nav-icon">👥</div>
+            <div class="nav-label">Directory</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
