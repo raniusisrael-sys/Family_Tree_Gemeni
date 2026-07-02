@@ -8,7 +8,6 @@ let familyDataArray = [];
 let familyMembersCache = {};
 let currentEditingMemberId = null;
 let currentActiveDirectoryFilterTag = "all";
-let globalBase64ImageFileBytes = null; 
 let globalActiveSelectedMobileNumber = ""; 
 
 function triggerAppHapticBump() {
@@ -33,16 +32,8 @@ window.previewAndVerifySelectedPhoto = function(input) {
     const statusBadge = document.getElementById("form-photo-status-badge");
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        statusBadge.innerText = "⏳ Reading image file...";
+        statusBadge.innerText = "✅ Ready (" + (file.size / 1024).toFixed(0) + " KB)";
         statusBadge.style.color = "#00a884";
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            globalBase64ImageFileBytes = e.target.result.split(",")[1];
-            statusBadge.innerText = "✅ Ready (" + (file.size / 1024).toFixed(0) + " KB)";
-            statusBadge.style.color = "#00a884";
-        };
-        reader.readAsDataURL(file);
     }
 };
 
@@ -126,7 +117,7 @@ function processFamilyArrayPacket(rawData) {
             name: clean(item[nameKey]) || "Unknown Name",
             gender: clean(item[genderKey]),
             dob: formatDateString(item[dobKey]),
-            fatherId: clean(item[fatherKey]),
+            fatherId: clean(item[fatherId]),
             spouseId: clean(item[spouseKey]),
             mobile: clean(item[mobileKey]) || "Not Provided",
             blood: clean(item[bloodKey]) || "Not Provided",
@@ -299,6 +290,7 @@ function buildDirectoryUI(dataset) {
     }).join('');
 }
 
+// 🔥 POWERFUL NATIVE HIGH-SPEED UPLOAD CONVERSION ENGINE
 window.submitNewMemberLocal = function() {
     triggerAppHapticBump();
     const name = document.getElementById("form-name").value.trim();
@@ -318,11 +310,14 @@ window.submitNewMemberLocal = function() {
     const overlayText = document.getElementById("loading-overlay-text");
     if (overlay) overlay.style.display = "flex";
 
-    if (globalBase64ImageFileBytes) {
-        if (overlayText) overlayText.innerText = "📸 Optimizing & uploading photo...";
+    const filePicker = document.getElementById("form-photo-file-picker");
+    
+    [span_2](start_span)// 🔥 FIXED: Passes a raw active file blob block into multi-part form payloads[span_2](end_span)
+    if (filePicker && filePicker.files && filePicker.files[0]) {
+        if (overlayText) overlayText.innerText = "📸 Uploading gallery image...";
         
         let formData = new FormData();
-        formData.append("image", globalBase64ImageFileBytes);
+        formData.append("image", filePicker.[span_3](start_span)files[0]); // Feeds raw file blob instantly[span_3](end_span)
 
         fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
             method: "POST",
@@ -331,7 +326,7 @@ window.submitNewMemberLocal = function() {
         .then(res => res.json())
         .then(json => {
             if (json && json.data && json.data.url) {
-                photoUrl = json.data.url; 
+                photoUrl = json.data.[span_4](start_span)url; // Grabs verified cloud image preview string[span_4](end_span)!
             }
             sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl);
         })
@@ -346,7 +341,7 @@ window.submitNewMemberLocal = function() {
 
 function sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl) {
     const overlayText = document.getElementById("loading-overlay-text");
-    if (overlayText) overlayText.innerText = "☁️ Synchronizing record with Cloud...";
+    if (overlayText) overlayText.innerText = "☁️ Syncing lineage with Cloud...";
 
     if (dob.includes('-')) {
         const parts = dob.split('-');
@@ -381,7 +376,6 @@ window.handleSaveConfirmation = function(response) {
 
 function clearFormFieldsInputs() {
     currentEditingMemberId = null;
-    globalBase64ImageFileBytes = null;
     const safeClear = (id) => { const el = document.getElementById(id); if (el) el.value = ""; };
     safeClear("form-name");
     safeClear("form-dob");
