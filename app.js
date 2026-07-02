@@ -117,7 +117,7 @@ function processFamilyArrayPacket(rawData) {
             name: clean(item[nameKey]) || "Unknown Name",
             gender: clean(item[genderKey]),
             dob: formatDateString(item[dobKey]),
-            fatherId: clean(item[fatherId]),
+            fatherId: clean(item[fatherKey]), 
             spouseId: clean(item[spouseKey]),
             mobile: clean(item[mobileKey]) || "Not Provided",
             blood: clean(item[bloodKey]) || "Not Provided",
@@ -290,7 +290,6 @@ function buildDirectoryUI(dataset) {
     }).join('');
 }
 
-// 🔥 POWERFUL NATIVE HIGH-SPEED UPLOAD CONVERSION ENGINE
 window.submitNewMemberLocal = function() {
     triggerAppHapticBump();
     const name = document.getElementById("form-name").value.trim();
@@ -312,12 +311,11 @@ window.submitNewMemberLocal = function() {
 
     const filePicker = document.getElementById("form-photo-file-picker");
     
-    [span_2](start_span)// 🔥 FIXED: Passes a raw active file blob block into multi-part form payloads[span_2](end_span)
     if (filePicker && filePicker.files && filePicker.files[0]) {
         if (overlayText) overlayText.innerText = "📸 Uploading gallery image...";
         
         let formData = new FormData();
-        formData.append("image", filePicker.[span_3](start_span)files[0]); // Feeds raw file blob instantly[span_3](end_span)
+        formData.append("image", filePicker.files[0]);
 
         fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
             method: "POST",
@@ -326,7 +324,7 @@ window.submitNewMemberLocal = function() {
         .then(res => res.json())
         .then(json => {
             if (json && json.data && json.data.url) {
-                photoUrl = json.data.[span_4](start_span)url; // Grabs verified cloud image preview string[span_4](end_span)!
+                photoUrl = json.data.url; 
             }
             sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl);
         })
