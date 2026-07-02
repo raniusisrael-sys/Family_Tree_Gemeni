@@ -1,4 +1,4 @@
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxnCOSzcGl4UiORRxPxmMvOZA3pGS7CTGAIB3dBx6qyQX4CoL8Y53wT7r12dnFcJPwk4g/exec";
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzLPsTnrbJIE2UVIgV8r6gKBFZ2DrT7KaUDQ_vHE3YkvkohYTk3oL0nxGppYvGHue4d2g/exec";
 const SCRIPT_URL_WITH_CALLBACK = `${GAS_API_URL}?callback=renderTreeCallback`;
 
 let familyDataArray = [];
@@ -314,7 +314,6 @@ function sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood
     let targetId = currentEditingMemberId ? currentEditingMemberId.toString() : "";
 
     let payload = {
-        action: "add",
         id: targetId,
         name: name,
         gender: gender,
@@ -618,7 +617,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     viewport.addEventListener('touchend', () => isDragging = false);
 
-    // 🔥 FIXED: Safely fire the default tab layout switch once components exist
     window.switchTab('tree');
     reloadLiveFamilyData();
 });
