@@ -56,7 +56,7 @@
         </div>
 
         <div id="screen-add" class="app-screen">
-            <div class="form-container">
+            <div class="form-container" onsubmit="event.preventDefault();">
                 <h3>➕ Add New Family Member</h3>
                 <p style="font-size: 12px; color: #64748b; margin-top:-5px; margin-bottom: 20px;">Enter details to append to your family records.</p>
                 
@@ -121,8 +121,8 @@
                 </div>
                 
                 <div style="display:flex; gap:10px; margin-top:25px; margin-bottom:40px;">
-                    <button class="cancel-btn" onclick="switchTab('tree')">Cancel</button>
-                    <button class="submit-btn" onclick="submitNewMemberLocal()">Save Member</button>
+                    <button type="button" class="cancel-btn" onclick="switchTab('tree')">Cancel</button>
+                    <button type="button" class="submit-btn" onclick="submitNewMemberLocal()">Save Member</button>
                 </div>
             </div>
         </div>
