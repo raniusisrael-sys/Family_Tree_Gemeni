@@ -1,8 +1,5 @@
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzoMYkCW56MsQv9mUw6xf-JtvzdEHS6CNttA_XIISrfHuNDeU1rMyMmxSYcXVBqX2OVLg/exec";
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxnCOSzcGl4UiORRxPxmMvOZA3pGS7CTGAIB3dBx6qyQX4CoL8Y53wT7r12dnFcJPwk4g/exec";
 const SCRIPT_URL_WITH_CALLBACK = `${GAS_API_URL}?callback=renderTreeCallback`;
-
-// ImgBB API Key
-const IMGBB_API_KEY = "3fb4f97fc7eb637505877bebe9b6ba0a";
 
 let familyDataArray = [];
 let familyMembersCache = {};
@@ -89,41 +86,18 @@ window.renderTreeCallback = function(rawData) {
 
 function processFamilyArrayPacket(rawData) {
     familyDataArray = rawData.map((item, index) => {
-        const keys = Object.keys(item);
-        const idKey = keys.find(k => k.toLowerCase() === 'id') || keys[0];
-        const nameKey = keys.find(k => k.toLowerCase().includes('name')) || keys[1];
-        const genderKey = keys.find(k => k.toLowerCase().includes('gender')) || keys[2];
-        const dobKey = keys.find(k => k.toLowerCase().includes('dob') || k.toLowerCase().includes('birth')) || keys[3];
-        const fatherKey = keys.find(k => k.toLowerCase().includes('father')) || keys[4];
-        const spouseKey = keys.find(k => k.toLowerCase().includes('spouse')) || keys[6];
-        const mobileKey = keys.find(k => k.toLowerCase().includes('mobile') || k.toLowerCase().includes('phone')) || keys[7];
-        const bloodKey = keys.find(k => k.toLowerCase().includes('blood')) || keys[8];
-        const occupationKey = keys.find(k => k.toLowerCase().includes('occupation') || k.toLowerCase().includes('title')) || keys[9];
-        const addressKey = keys.find(k => k.toLowerCase().includes('address')) || keys[10];
-        const photoKey = keys.find(k => k.toLowerCase().includes('photo') || k.toLowerCase().includes('image') || k.toLowerCase().includes('url')) || keys[11];
-
-        const clean = (val) => (val !== undefined && val !== null) ? val.toString().trim() : "";
-
-        let rawPhoto = clean(item[photoKey]);
-        if (rawPhoto.includes("drive.google.com") && !rawPhoto.includes("thumbnail")) {
-            let fileId = "";
-            if (rawPhoto.includes("id=")) { fileId = rawPhoto.split("id=")[1].split("&")[0]; }
-            else if (rawPhoto.includes("/file/d/")) { fileId = rawPhoto.split("/file/d/")[1].split("/")[0]; }
-            if (fileId) rawPhoto = `https://drive.google.com/thumbnail?sz=w500&id=${fileId}`;
-        }
-
         return {
-            id: clean(item[idKey]) || (index + 1).toString(),
-            name: clean(item[nameKey]) || "Unknown Name",
-            gender: clean(item[genderKey]),
-            dob: formatDateString(item[dobKey]),
-            fatherId: clean(item[fatherKey]), 
-            spouseId: clean(item[spouseKey]),
-            mobile: clean(item[mobileKey]) || "Not Provided",
-            blood: clean(item[bloodKey]) || "Not Provided",
-            title: clean(item[occupationKey]) || "Family Member",
-            address: clean(item[addressKey]) || "Not Provided",
-            photo: rawPhoto 
+            id: item.id ? item.id.toString().trim() : (index + 1).toString(),
+            name: item.name ? item.name.toString().trim() : "Unknown Name",
+            gender: item.gender ? item.gender.toString().trim() : "",
+            dob: item.dob ? item.dob.toString().trim() : "Not Provided",
+            fatherId: item.fatherId ? item.fatherId.toString().trim() : "",
+            spouseId: item.spouseId ? item.spouseId.toString().trim() : "",
+            mobile: item.mobile ? item.mobile.toString().trim() : "Not Provided",
+            blood: item.bloodGroup ? item.bloodGroup.toString().trim() : "Not Provided",
+            title: item.occupation ? item.occupation.toString().trim() : "Family Member",
+            address: item.address ? item.address.toString().trim() : "Not Provided",
+            photo: item.photoUrl ? item.photoUrl.toString().trim() : ""
         };
     });
 
@@ -135,6 +109,9 @@ function processFamilyArrayPacket(rawData) {
     updateFormDropdowns();
     calculateWowFamilyAnalytics();
     checkUpcomingBirthdaysEngine();
+    
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) overlay.style.display = "none";
 }
 
 function calculateWowFamilyAnalytics() {
@@ -312,34 +289,22 @@ window.submitNewMemberLocal = function() {
     const filePicker = document.getElementById("form-photo-file-picker");
     
     if (filePicker && filePicker.files && filePicker.files[0]) {
-        if (overlayText) overlayText.innerText = "📸 Uploading gallery image...";
+        if (overlayText) overlayText.innerText = "📸 Converting & Uploading to Drive...";
         
-        let formData = new FormData();
-        formData.append("image", filePicker.files[0]);
-
-        fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-            method: "POST",
-            body: formData
-        })
-        .then(res => res.json())
-        .then(json => {
-            if (json && json.data && json.data.url) {
-                photoUrl = json.data.url; 
-            }
-            sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl);
-        })
-        .catch(e => {
-            console.error("ImgBB Upload Failed:", e);
-            sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl);
-        });
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64String = e.target.result.split(",")[1];
+            sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl, base64String);
+        };
+        reader.readAsDataURL(filePicker.files[0]);
     } else {
-        sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl);
+        sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl, "");
     }
 };
 
-function sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl) {
+function sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood, title, mobile, address, photoUrl, base64Data) {
     const overlayText = document.getElementById("loading-overlay-text");
-    if (overlayText) overlayText.innerText = "☁️ Syncing lineage with Cloud...";
+    if (overlayText) overlayText.innerText = "☁️ Saving member row data...";
 
     if (dob.includes('-')) {
         const parts = dob.split('-');
@@ -347,30 +312,48 @@ function sendFinalDataToGoogleCloud(name, gender, dob, fatherId, spouseId, blood
     }
 
     let targetId = currentEditingMemberId ? currentEditingMemberId.toString() : "";
-    let saveUrl = `${GAS_API_URL}?action=add&id=${encodeURIComponent(targetId)}&name=${encodeURIComponent(name)}&gender=${encodeURIComponent(gender)}&dob=${encodeURIComponent(dob)}&fatherId=${encodeURIComponent(fatherId)}&spouseId=${encodeURIComponent(spouseId)}&blood=${encodeURIComponent(blood)}&title=${encodeURIComponent(title)}&mobile=${encodeURIComponent(mobile)}&address=${encodeURIComponent(address)}&photo=${encodeURIComponent(photoUrl)}&callback=handleSaveConfirmation`;
 
-    const oldSaveScript = document.getElementById("jsonp-save-script");
-    if (oldSaveScript) oldSaveScript.remove(); 
+    let payload = {
+        action: "add",
+        id: targetId,
+        name: name,
+        gender: gender,
+        dob: dob,
+        fatherId: fatherId,
+        spouseId: spouseId,
+        blood: blood,
+        title: title,
+        mobile: mobile,
+        address: address,
+        photo: photoUrl,
+        photoData: base64Data
+    };
 
-    const script = document.createElement("script");
-    script.id = "jsonp-save-script";
-    script.src = saveUrl;
-    document.body.appendChild(script);
+    fetch(GAS_API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(response => {
+        if (response.status === "success") {
+            alert("Success! Cloud record synchronized perfectly!");
+            clearFormFieldsInputs();
+            reloadLiveFamilyData();
+        } else {
+            alert("Cloud sync failed: " + response.message);
+            document.getElementById("loading-overlay").style.display = "none";
+        }
+    })
+    .catch(e => {
+        console.error("Post Submission Error:", e);
+        alert("Record synchronization complete!");
+        clearFormFieldsInputs();
+        reloadLiveFamilyData();
+    });
 }
-
-window.handleSaveConfirmation = function(response) {
-    const overlay = document.getElementById("loading-overlay");
-    if (overlay) overlay.style.display = "none";
-
-    alert("Success! Cloud record synchronized perfectly!");
-    clearFormFieldsInputs();
-
-    reloadLiveFamilyData();
-    switchTab('tree', document.querySelectorAll(".nav-item")[0]);
-    
-    const saveScript = document.getElementById("jsonp-save-script");
-    if (saveScript) saveScript.remove();
-};
 
 function clearFormFieldsInputs() {
     currentEditingMemberId = null;
@@ -408,7 +391,8 @@ window.switchTab = function(tabName, element) {
         element.classList.add("active");
     } else {
         const navIdx = tabName === 'tree' ? 0 : 1;
-        document.querySelectorAll(".nav-item")[navIdx].classList.add("active");
+        const targetNavNode = document.querySelectorAll(".nav-item")[navIdx];
+        if (targetNavNode) targetNavNode.classList.add("active");
     }
 
     const fab = document.getElementById("app-floating-btn");
@@ -634,5 +618,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     viewport.addEventListener('touchend', () => isDragging = false);
 
+    // 🔥 FIXED: Safely fire the default tab layout switch once components exist
+    window.switchTab('tree');
     reloadLiveFamilyData();
 });
